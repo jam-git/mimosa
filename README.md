@@ -1,7 +1,7 @@
 # mimosa
 MIMOSA algorithm for fast, linear-time clustering of data
 
-This is a python3 version of the fast clustering algorithm described here:
+This is a python3 version of my fast clustering algorithm described here:
     https://arxiv.org/abs/1702.05425
 
 The code lets you benchmark and compare two clustering methods:
