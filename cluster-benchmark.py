@@ -33,11 +33,22 @@ class DataClusterLinear (DataCluster, abc.ABC):
 
     @abc.abstractmethod
     def similarity_size (self, mi_size, mo_size, ov_size):
-        """The similarity_size() method must be implemented by a subclass."""
+        """The similarity_size() method must be implemented by a subclass.
+
+        Arguments:
+        mi_size -- Number of elements in one of the sets.
+        mo_size -- Number of elements in the other set.
+        ov_size -- Number of elements in the overlap (intersection) of
+                   the two sets."""
         pass
 
     def __init__ (self, args):
-        """Populate data needed for MIMOSA clustering."""
+        """Populate data needed for MIMOSA clustering.
+
+        Arguments:
+        args -- A dictionary whose keys are to become attributes of
+                the DataClusterLinear object.  Required keys are:
+                sim_threshold, sizes."""
         if not args.get('sizes'): raise ValueError('Sizes must be provided')
         for key in args.keys(): setattr(self, key, args[key])
         self.markers = {}
@@ -65,7 +76,11 @@ class DataClusterLinear (DataCluster, abc.ABC):
                     itertools.combinations(nums, ov_size))
 
     def make_mimo_table (self, sim_threshold, sizes):
-        """Construct and initialize MatchOut and MarkIn tables."""
+        """Construct and initialize MatchOut and MarkIn tables.
+
+        Arguments:
+        sim_threshold -- Similarity threshold value between 0 and 1.
+        sizes -- List of allowable sizes of input signatures."""
         mark_in_table   = [[] for i in range(sizes[-1] + 1)]
         match_out_table = [[] for i in range(sizes[-1] + 1)]
 
@@ -97,7 +112,13 @@ class DataClusterLinear (DataCluster, abc.ABC):
     def cluster (self, sig_num, sim_threshold, sizes, elements):
         """Take an input data signature and assign it to a cluster.
 
-        This is the core function of the MIMOSA implementation."""
+        This is the core function of the MIMOSA implementation.
+
+        Arguments:
+        sig_num -- Index of the current input, in input series.
+        sim_threshold -- Similarity threshold, between 0 and 1.
+        sizes -- List of allowable sizes of signatures.
+        elements -- The elements of the input signature."""
 
         sig_size     = len(elements)                # The signature size.
         combos_sig   = self.combinations[sig_size]  # Find the needed portions
@@ -165,19 +186,16 @@ class DataClusterLinearJaccard (DataClusterLinear):
         super().__init__(args)
 
     def similarity_size (self, n_mark_in, n_match_out, n_overlap):
-        """Jaccard: Divide size of intersection by size of union."""
+        """Jaccard: Divide size of intersection by size of union.
+
+        Arguments:
+        mi_size -- Number of elements in one of the sets.
+        mo_size -- Number of elements in the other set.
+        ov_size -- Number of elements in the overlap (intersection) of
+                   the two sets."""
         return n_overlap / (n_mark_in + n_match_out - n_overlap)  # Jaccard.
 
 
-# ----------------------------------------------------------------------
-# DataClusterCentroid implements a simple centroid clustering
-#   algorithm.  Salient features of the implemented version include:
-#     * The first assigned signature in a cluster is designated the centroid.
-#     * Subsequent signatures matching the centroid are assigned to the
-#         cluster, but do not enlarge the cluster neighborhood.
-#     * When an input signature matches more than one centroid, the input is
-#         assigned to the earliest (lowest numbered) corresponding cluster.
-# ----------------------------------------------------------------------
 class DataClusterCentroid (DataCluster, abc.ABC):
     """Implement a simple centroid clustering algorithm.
 
@@ -189,17 +207,32 @@ class DataClusterCentroid (DataCluster, abc.ABC):
 
     @abc.abstractmethod
     def similarity (self, setA, setB):
-        """The similarity() method must be implemented by a subclass."""
+        """The similarity() method must be implemented by a subclass.
+
+        Arguments:
+        setA -- One of the sets.
+        setB -- The other set."""
         pass
 
     def __init__ (self, args):
-        """Copy arg key-values as self attrs."""
+        """Copy arg key-values as self attrs.
+
+        Arguments:
+        args -- A dictionary whose keys are to become attributes of
+                the DataClusterLinear object.  Required keys are:
+                sim_threshold, sizes."""
         if not args.get('sizes'): raise ValueError('Sizes must be provided')
         for key in args.keys(): setattr(self, key, args[key])
         self.clusters = []
 
     def cluster (self, sig_num, sim_threshold, sizes, elements):
-        """Take an input signature and assign it to a cluster."""
+        """Take an input signature and assign it to a cluster.
+
+        Arguments:
+        sig_num -- Index of the current input, in input series.
+        sim_threshold -- Similarity threshold, between 0 and 1.
+        sizes -- List of allowable sizes of signatures.
+        elements -- The elements of the input signature."""
         clusters   = self.clusters  # List of existing clusters.
         cluster_id = sig_num        # Initialize the cluster assignment.
 
@@ -221,11 +254,8 @@ class DataClusterCentroid (DataCluster, abc.ABC):
         return cluster_id      # Return the assigned cluster ID.
 
 
-# ----------------------------------------------------------------------
-# DataClusterCentroidJaccard is a subclass of DataClusterCentroid.
-#   It adds a Jaccard similarity measure.
-# ----------------------------------------------------------------------
 class DataClusterCentroidJaccard (DataClusterCentroid):
+    """Implement a Jaccard similarity measure for DataClusterCentroid."""
 
     def __init__ (self, args):
         """Pass args up to super class initializer."""
@@ -235,19 +265,17 @@ class DataClusterCentroidJaccard (DataClusterCentroid):
     # This subclass of DataClusterCentroid implements a Jaccard similarity measure.
     #
     def similarity (self, A, B):
-        """Jaccard: Divide size of intersection by size of union."""
-        A = set(A)
+        """Jaccard: Divide size of intersection by size of union.
+
+        Arguments:
+        A -- One of the sets. (Can be a list or set.)
+        B -- The other set. (Can be a list or set.)"""
+        A = set(A)  # Convert to set (get rid of duplicates, etc.).
         B = set(B)
         sUnion = len(A.union(B))
         if sUnion == 0: return 0                 # Prevent division by zero.
         return len(A.intersection(B)) / sUnion   # Intersection size / union size.
 
-
-# ----------------------------------------------------------------------
-# This program is a wrapper for the two clustering algorithms.
-#   It is invoked from the command line, initializes one of the
-#   algorithms, runs the benchmark, and records the output.
-# ----------------------------------------------------------------------
 
 def read_command_line ():
     """Read and validate the command-line arguments."""
@@ -306,7 +334,12 @@ def read_command_line ():
 
 
 def valid_next_arg (arg, prev_arg, regex):
-    """Check whether arg exists and satisfies the regex."""
+    """Check whether arg exists and satisfies the regex.
+
+    Arguments:
+    arg -- The current command-line argument value.
+    prev_arg -- The previous command-line argument value.
+    regex -- Regular expression to validate arg."""
     if not arg: usage("Missing value after " + prev_arg)
     p = re.compile(regex)
     if not p.match(arg): usage("Invalid value after " + prev_arg + " : " + arg)
@@ -314,7 +347,10 @@ def valid_next_arg (arg, prev_arg, regex):
 
 
 def usage (messages = []):
-    """Print out error messages (if any), and usage instructions."""
+    """Print out error messages (if any), and usage instructions.
+
+    Arguments:
+    messages -- List of error messages (optional)."""
     for message in messages: print(message, flush=True)
     str = """
 USAGE:
@@ -335,10 +371,12 @@ USAGE:
     sys.exit(1 if messages else 0)
 
 
-# ----------------------------------------------------------------------
-# Run the benchmark.
-# ----------------------------------------------------------------------
 def main ():
+    """Run the benchmark.
+
+    This program is a wrapper for the two clustering algorithms.
+    It is invoked from the command line, initializes one of the
+    algorithms, runs the benchmark, and records the output."""
 
     sys.stdout.flush()
     run, n_items, sim_threshold, sizes = read_command_line()  # Get instructions.
