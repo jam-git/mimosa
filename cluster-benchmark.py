@@ -410,8 +410,8 @@ def main ():
         if sig_num <= 2000 and not (sig_num % 10) or not (sig_num % 1000):
             print("%d ----- %.6f" % (sig_num, time.time() - t0), flush=True)
 
-            sig_num = sig_num + 1
-            if sig_num > n_items: break   # Exit when requested number is done.
+        sig_num = sig_num + 1
+        if sig_num > n_items: break   # Exit when requested number is done.
 
     # Report memory usage.
     print("Memory usage: " +
