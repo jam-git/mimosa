@@ -6,7 +6,7 @@
 #
 # 2018-05-08 Jonathan A. Marshall
 #
-# Python program to run benchmark tests comparing a MIMOSA clustering
+# Python3 program to run benchmark tests comparing a MIMOSA clustering
 #   algorithm to a Centroid clustering algorithm.  See the associated
 #   research paper for details.
 #
